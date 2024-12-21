@@ -1,0 +1,48 @@
+name: LCLD
+dataset: data/lcld.csv
+desc: credit requests dataset that can be accepted or rejected
+
+dnn:
+  layers: [ 64 ]
+
+lpf:
+  lambda_: 0.5  # Regularization parameter for L2 norm
+  max_iter: 50
+  alpha: 0.01
+
+cpgd:
+  feat_file:  "data/feature_lcld.csv"
+
+# https://github.com/serval-uni-lu/moeva2-ijcai22-replication/blob/aacf2d954d58cf5b690e485a9fb81e73d6715679/src/examples/lcld/lcld_constraints.py#L168
+constraints:
+  immutable:
+    - int_rate
+    - grade
+    - issue_d
+    - earliest_cr_line
+    - pub_rec
+    - pub_rec_bankruptcies
+    - fico_score
+    - initial_list_status_w
+    - diff_issue_d_earliest_cr_line
+    - ratio_pub_rec_diff_issue_d_earliest_cr_line
+    - ratio_pub_rec_bankruptcies_diff_issue_d_earliest_cr_line
+    - ratio_pub_rec_bankruptcies_pub_rec
+    - home_ownership_MORTGAGE
+    - home_ownership_OTHER
+    - home_ownership_OWN
+    - home_ownership_RENT
+    - verification_status_Not_Verified
+    - verification_status_Source_Verified
+    - verification_status_Verified
+  predicates:
+    - int(((installment - loan_amnt * (int_rate/1200) * ((1+(int_rate/1200)) ** term) / (((1+(int_rate/1200)) ** term)-1)) ** 2)**(0.5)) - 0.099999 <= 20
+    - open_acc <= total_acc
+    - pub_rec_bankruptcies <= pub_rec
+    - int((term**2)**(0.5)) == 36 or int((term**2)**(0.5)) == 60
+    - int(((ratio_loan_amnt_annual_inc - loan_amnt / annual_inc)**2)**(0.5)) == 0
+    - int(((ratio_open_acc_total_acc - open_acc / total_acc)**2)**(0.5)) == 0
+    - int(((diff_issue_d_earliest_cr_line - (((issue_d // 100) * 12 + (issue_d % 100)) - ((earliest_cr_line // 100) * 12 + (earliest_cr_line % 100))))**2)**(0.5)) == 0
+    - int(((ratio_pub_rec_diff_issue_d_earliest_cr_line - pub_rec / diff_issue_d_earliest_cr_line)**2)**(0.5)) == 0
+    - int(((ratio_pub_rec_bankruptcies_diff_issue_d_earliest_cr_line - pub_rec_bankruptcies / diff_issue_d_earliest_cr_line)**2)**(0.5)) == 0
+    - ((ratio_pub_rec_bankruptcies_pub_rec - pub_rec_bankruptcies / (pub_rec + 1e-5))**2)**(0.5) <= 1

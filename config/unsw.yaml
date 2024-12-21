@@ -1,0 +1,25 @@
+name: UNSW-NB15
+dataset: data/unsw_nb15.csv
+desc: sampled from 175K training set
+
+dnn:
+  layers: [ 64, 64, 32 ]
+
+lpf:
+  lambda_: 0.5  # Regularization parameter for L2 norm
+  max_iter: 50
+  alpha: 0.01
+
+cpgd:
+  feat_file: "data/feature_unsw.csv"
+
+constraints:
+  predicates:
+    - int(proto_tcp) + int(proto_udp) + int(proto_other) == 1
+    - int(service_none) + int(service_http) + int(service_dns) + int(service_other) == 1
+    - int(state_FIN) + int(state_INT) + int(state_other) == 1
+    - int(proto_tcp) != 1 or (int(swin) == 255 or int(dwin) == 255) or (int(dbytes) == int(dwin) == 0) or int(state_FIN)==1
+    - int(proto_tcp) != 1 or int(state_FIN) == 1 or int(dur) == 0 or int(state_INT) != 1 or int(dbytes) == 0
+    - int(proto_tcp) == 1 or (int(swin) == int(dwin) == int(stcpb) == int(dtcpb) == 0)
+
+

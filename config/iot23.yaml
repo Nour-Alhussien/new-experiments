@@ -1,0 +1,42 @@
+name: IoT-23
+dataset: data/ctu_1-8-34.csv
+desc: sampled from IoT-23 malware captures 1-1, 8-1, 34-1
+
+dnn:
+  layers: [ 64, 32 ]
+
+lpf:
+  lambda_: 0.5  # Regularization parameter for L2 norm
+  max_iter: 50
+  alpha: 0.01
+  
+zoo:
+  confidence: 0.8
+
+pgd:
+  num_random_init: 100
+
+cpgd:
+  feat_file: "data/feature_iot.csv"
+  
+constraints:
+  immutable:
+    - proto=udp
+    - proto=tcp
+    - proto=icmp
+    - conn_state=S0
+    - conn_state=SF
+    - conn_state=other
+    - history=D
+    - history=Dd
+    - history=S
+    - history=other
+  predicates:
+    - orig_pkts <= orig_ip_bytes
+    - resp_pkts <= resp_ip_bytes
+    - int(conn_state=S0) != 1 or int(resp_pkts) == int(resp_ip_bytes) == 0
+    - int(proto=tcp) != 1 or int(orig_pkts) == 0 or orig_ip_bytes >= 20
+    - int(proto=tcp) != 1 or int(resp_pkts) == 0 or resp_ip_bytes >= 20
+    - int(proto=tcp) != 1 or orig_pkts >= resp_pkts or orig_ip_bytes < resp_ip_bytes or int(conn_state=other) != 1
+    - int(proto=udp) != 1 or orig_pkts >= resp_pkts or (int(history=Dd) == 1 and int(conn_state=SF) == 1)
+    - int(proto=udp) != 1 or orig_pkts < resp_pkts or orig_ip_bytes >= resp_ip_bytes or int(conn_state=SF) == 1

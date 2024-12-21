@@ -1,0 +1,29 @@
+name: URL
+dataset: data/url.csv
+desc: URL dataset of legitimate and phishing URLs
+
+cpgd:
+  feat_file: "data/feature_url.csv"
+
+lpf:
+  lambda_: 0.5  # Regularization parameter for L2 norm
+  max_iter: 50
+  alpha: 0.01
+
+# ref: https://github.com/serval-uni-lu/constrained-attacks/blob/d797e85f46c0a15f7d78bcf552fa95fb18782b46/tests/attacks/moeva/url_constraints.py#L13C8-L13C8
+constraints:
+  predicates:
+    - length_hostname <= length_url
+    - (nb_dots + nb_hyphens + nb_at + nb_qm + nb_and + nb_or + nb_eq + nb_underscore + nb_tilde + nb_percent + nb_slash + nb_star + nb_colon + nb_comma + nb_semicolumn + (nb_space * 3)) <= length_url
+    - 0 <= nb_com or 0 < nb_dots
+    - 0 <= http_in_path or 0 < nb_slash
+    - ((3 * nb_www) + (4 * nb_com) + (2 * http_in_path)) <= length_url
+    - 0 <= nb_space or 0 < ratio_digits_url
+    - 0 <= ip or 0 < ratio_digits_url
+    - 0 <= port or 0 < ratio_digits_url
+    - 0 <= abnormal_subdomain or 0 < ratio_digits_host
+    - nb_external_redirection <= nb_redirection
+    - (nb_www * 3) <= (length_url + 1)
+    - (nb_com * 4) <= (length_url + 1)
+    - (ip * 4) <= (length_url + 1)
+    - (http_in_path * 2) <= (length_url + 1)
